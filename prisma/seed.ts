@@ -14,17 +14,16 @@ const achievements = [
   { name: '50 Purchases', slug: '50-purchases', group: 'purchases', threshold: 50, order: 5 },
 
   // group: achievements_count
-  { name: '5 Achievements', slug: '5-achievements', group: 'achievements_count', threshold: 5, order: 1 },
-  { name: '10 Achievements', slug: '10-achievements', group: 'achievements_count', threshold: 10, order: 2 },
-  { name: '15 Achievements', slug: '15-achievements', group: 'achievements_count', threshold: 15, order: 3 },
+  { name: '3 Achievements', slug: '3-achievements', group: 'achievements_count', threshold: 3, order: 1 },
+  { name: '5 Achievements', slug: '5-achievements', group: 'achievements_count', threshold: 5, order: 2 },
+  { name: '7 Achievements', slug: '7-achievements', group: 'achievements_count', threshold: 7, order: 3 },
 ];
 
 // Badges unlock based on the user's total number of unlocked achievements.
 const badges = [
   { name: 'Beginner', slug: 'beginner', requiredAchievements: 3, order: 1 },
-  { name: 'Intermediate', slug: 'intermediate', requiredAchievements: 8, order: 2 },
-  { name: 'Advanced', slug: 'advanced', requiredAchievements: 15, order: 3 },
-  { name: 'Expert', slug: 'expert', requiredAchievements: 25, order: 4 },
+  { name: 'Intermediate', slug: 'intermediate', requiredAchievements: 5, order: 2 },
+  { name: 'Advanced', slug: 'advanced', requiredAchievements: 8, order: 3 },
 ];
 
 async function main() {
