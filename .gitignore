@@ -1,0 +1,31 @@
+# compiled output
+/dist
+/node_modules
+
+node_modules/
+
+# logs
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# env files
+.env
+.env.*.local
+
+# IDE
+.idea
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.DS_Store
+
+# coverage
+/coverage
+/.nyc_output
+
+# prisma generated client (if ever generated outside node_modules)
+/generated

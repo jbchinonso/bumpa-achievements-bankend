@@ -1,0 +1,126 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String   @id @default(uuid())
+  email          String   @unique
+  name           String
+  accountNumber  String   @map("account_number")
+  bankCode       String   @map("bank_code")
+  currentBadgeId String?  @map("current_badge_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  currentBadge         Badge?                @relation("UserCurrentBadge", fields: [currentBadgeId], references: [id])
+  userAchievements     UserAchievement[]
+  userBadges           UserBadge[]
+  purchases            Purchase[]
+  cashbackTransactions CashbackTransaction[]
+
+  @@map("users")
+}
+
+model Achievement {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  slug        String   @unique
+  group       String // "purchases" | "achievements_count"
+  threshold   Int
+  description String?
+  order       Int
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  userAchievements UserAchievement[]
+
+  @@map("achievements")
+}
+
+model Badge {
+  id                   String   @id @default(uuid())
+  name                 String   @unique
+  slug                 String   @unique
+  requiredAchievements Int      @map("required_achievements")
+  order                Int
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  usersWithCurrentBadge User[]                @relation("UserCurrentBadge")
+  userBadges             UserBadge[]
+  cashbackTransactions   CashbackTransaction[]
+
+  @@map("badges")
+}
+
+model UserAchievement {
+  id            String   @id @default(uuid())
+  userId        String   @map("user_id")
+  achievementId String   @map("achievement_id")
+  unlockedAt    DateTime @default(now()) @map("unlocked_at")
+
+  user        User        @relation(fields: [userId], references: [id])
+  achievement Achievement @relation(fields: [achievementId], references: [id])
+
+  @@unique([userId, achievementId])
+  @@map("user_achievements")
+}
+
+model UserBadge {
+  id                String         @id @default(uuid())
+  userId            String         @map("user_id")
+  badgeId           String         @map("badge_id")
+  unlockedAt        DateTime       @default(now()) @map("unlocked_at")
+  cashbackStatus    CashbackStatus @default(PENDING) @map("cashback_status")
+  cashbackReference String?        @map("cashback_reference")
+
+  user  User  @relation(fields: [userId], references: [id])
+  badge Badge @relation(fields: [badgeId], references: [id])
+
+  @@unique([userId, badgeId])
+  @@map("user_badges")
+}
+
+model Purchase {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  amount    Int // stored in kobo
+  productId String?  @map("product_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("purchases")
+}
+
+model CashbackTransaction {
+  id                String         @id @default(uuid())
+  userId            String         @map("user_id")
+  badgeId           String         @map("badge_id")
+  amount            Int // 30000 kobo
+  currency          String         @default("NGN")
+  status            CashbackStatus @default(PENDING)
+  provider          String         @default("paystack")
+  providerReference String?        @map("provider_reference")
+  providerResponse  Json?          @map("provider_response")
+  failureReason     String?        @map("failure_reason")
+  initiatedAt       DateTime       @default(now()) @map("initiated_at")
+  completedAt       DateTime?      @map("completed_at")
+  createdAt         DateTime       @default(now()) @map("created_at")
+  updatedAt         DateTime       @updatedAt @map("updated_at")
+
+  user  User  @relation(fields: [userId], references: [id])
+  badge Badge @relation(fields: [badgeId], references: [id])
+
+  @@map("cashback_transactions")
+}
+
+enum CashbackStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REVERSED
+}
