@@ -2,9 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
+import helmet from 'helmet';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { PAYMENT_PROVIDER } from '../src/common/interfaces/payment-provider.interface';
+import { AllExceptionsFilter } from '../src/common/filters/all-exceptions.filter';
 
 // Achievement/badge summary shape returned by GET /users/:userId/achievements.
 interface AchievementsSummary {
@@ -41,9 +43,11 @@ describe('Achievements flow (e2e)', () => {
       .compile();
 
     app = moduleFixture.createNestApplication();
+    app.use(helmet());
     app.useGlobalPipes(
       new ValidationPipe({ whitelist: true, transform: true }),
     );
+    app.useGlobalFilters(new AllExceptionsFilter());
     await app.init();
 
     prisma = app.get(PrismaService);
