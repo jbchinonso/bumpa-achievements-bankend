@@ -160,10 +160,98 @@ npm run db:seed           # seed achievements + badges (idempotent, safe to re-r
 
 ## API reference
 
-All required endpoint:
+| Method | Path | Purpose |
+|---|---|---|
+| `POST` | `/users` | Create a user |
+| `GET` | `/users/:id` | Fetch a user |
+| `POST` | `/purchases` | Record a purchase — triggers the whole unlock chain |
+| `GET` | `/users/:userId/purchases` | List a user's purchases |
+| `GET` | `/achievements` | List all achievement definitions |
+| **`GET`** | **`/users/:userId/achievements`** | **Required endpoint** — unlocked/next-available achievements + badge progress |
+| `GET` | `/badges` | List all badge definitions |
+| `GET` | `/health` | Liveness/readiness check (confirms the DB is actually reachable) |
 
-### `GET /users/:userId/achievements`
+### `POST /users`
 
+Request body:
+```json
+{
+  "email": "jane@example.com",
+  "name": "Jane Doe",
+  "accountNumber": "0123456789",
+  "bankCode": "044"
+}
+```
+
+Response `201`:
+```json
+{
+  "id": "eec6f0fc-2030-4135-9bf8-ea944f0b3588",
+  "email": "jane@example.com",
+  "name": "Jane Doe",
+  "accountNumber": "0123456789",
+  "bankCode": "044",
+  "currentBadgeId": null,
+  "createdAt": "2026-08-23T13:44:41.802Z",
+  "updatedAt": "2026-08-23T13:44:41.802Z"
+}
+```
+
+### `GET /users/:id`
+
+Response `200`: same shape as the `POST /users` response above. `404` if the user doesn't exist.
+
+### `POST /purchases`
+
+`amount` is in kobo; `productId` is optional.
+
+Request body:
+```json
+{
+  "userId": "eec6f0fc-2030-4135-9bf8-ea944f0b3588",
+  "amount": 5000,
+  "productId": "sku-123"
+}
+```
+
+Response `201`:
+```json
+{
+  "id": "e6ff4c69-c08e-4911-8551-a1c0a7db70ca",
+  "userId": "eec6f0fc-2030-4135-9bf8-ea944f0b3588",
+  "amount": 5000,
+  "productId": "sku-123",
+  "createdAt": "2026-08-23T13:44:48.066Z"
+}
+```
+
+Saving the purchase synchronously runs the full unlock chain (achievements → badges → cashback) before this responds, so the response you get right after can be followed immediately by `GET /users/:userId/achievements` to see the result. `404` if `userId` doesn't exist; `400` for a non-positive `amount`.
+
+### `GET /users/:userId/purchases`
+
+Response `200`: an array of purchase objects, shaped like the `POST /purchases` response, ordered oldest first.
+
+### `GET /achievements`
+
+Response `200`: an array of achievement definitions.
+```json
+[
+  {
+    "id": "3f1b1e2a-...",
+    "name": "First Purchase",
+    "slug": "first-purchase",
+    "group": "purchases",
+    "threshold": 1,
+    "description": null,
+    "order": 1,
+    "createdAt": "2026-08-23T09:31:42.000Z"
+  }
+]
+```
+
+### `GET /users/:userId/achievements` (required endpoint)
+
+Response `200`:
 ```json
 {
   "unlocked_achievements": ["First Purchase", "5 Purchases"],
@@ -176,18 +264,30 @@ All required endpoint:
 
 - `next_available_achievements` returns only the **next** achievement per group (not every remaining one).
 - `current_badge`/`next_badge` are `null` when the user hasn't unlocked any badge yet, or has already unlocked the highest one, respectively.
+- `404` if the user doesn't exist; `400` for a malformed `userId`.
 
-### Supporting endpoints
+### `GET /badges`
 
-| Method | Path | Purpose |
-|---|---|---|
-| `POST` | `/users` | Create a user (`email`, `name`, `accountNumber`, `bankCode`) |
-| `GET` | `/users/:id` | Fetch a user |
-| `POST` | `/purchases` | Record a purchase (`userId`, `amount` in kobo, optional `productId`) — triggers the whole unlock chain |
-| `GET` | `/users/:userId/purchases` | List a user's purchases |
-| `GET` | `/achievements` | List all achievement definitions |
-| `GET` | `/badges` | List all badge definitions |
-| `GET` | `/health` | Liveness/readiness check (confirms the DB is actually reachable) |
+Response `200`: an array of badge definitions.
+```json
+[
+  {
+    "id": "eebf3f5d-...",
+    "name": "Beginner",
+    "slug": "beginner",
+    "requiredAchievements": 3,
+    "order": 1,
+    "createdAt": "2026-08-23T09:31:42.000Z"
+  }
+]
+```
+
+### `GET /health`
+
+Response `200`:
+```json
+{ "status": "ok" }
+```
 
 ## Running tests
 
