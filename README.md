@@ -71,6 +71,20 @@ Badge progression is based on **total unlocked achievements**, not purchases dir
 
 Every tier is reachable purely from the 8 seeded achievements (Advanced is reached exactly when a user has unlocked all 8), so there's no dead, unreachable seed data.
 
+### Worked example: reaching the Advanced badge
+
+Purchases alone are enough to reach every tier, since crossing a `purchases` threshold can immediately cascade into an `achievements_count` unlock in the same request:
+
+| Purchase # | What unlocks | Total unlocked achievements | Badge reached |
+|---|---|---|---|
+| 1 | First Purchase | 1 | — |
+| 5 | 5 Purchases | 2 | — |
+| 10 | 10 Purchases → total hits 3 → cascades into 3 Achievements | 4 | **Beginner** (needs 3) |
+| 25 | 25 Purchases → total hits 5 → cascades into 5 Achievements | 6 | **Intermediate** (needs 5) |
+| 50 | 50 Purchases → total hits 7 → cascades into 7 Achievements | 8 | **Advanced** (needs 8) |
+
+At purchase #50 the user has unlocked all 8 seeded achievements — every `purchases` achievement and every `achievements_count` achievement — which is exactly Advanced's threshold. That final badge unlock also triggers the ₦300 cashback transfer. This exact progression is what `test/achievements.e2e-spec.ts` asserts against a real database.
+
 ## Event flow
 
 ```
