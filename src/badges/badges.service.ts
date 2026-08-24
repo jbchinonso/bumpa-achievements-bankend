@@ -27,7 +27,9 @@ export class BadgesService {
       where: { userId },
       select: { badgeId: true },
     });
-    const unlockedIds = new Set(unlockedBadges.map((unlocked) => unlocked.badgeId));
+    const unlockedIds = new Set(
+      unlockedBadges.map((unlocked) => unlocked.badgeId),
+    );
 
     const toUnlock = badges.filter(
       (badge) =>

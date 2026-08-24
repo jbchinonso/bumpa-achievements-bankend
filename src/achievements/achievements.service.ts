@@ -120,17 +120,24 @@ export class AchievementsService {
       orderBy: { unlockedAt: 'asc' },
       include: { achievement: true },
     });
-    const unlockedIds = new Set(userAchievements.map((userAchievement) => userAchievement.achievementId));
+    const unlockedIds = new Set(
+      userAchievements.map((userAchievement) => userAchievement.achievementId),
+    );
 
     const unlockedAchievements = userAchievements.map(
-      (userAchievement) => userAchievement.achievement.name
+      (userAchievement) => userAchievement.achievement.name,
     );
 
     // Only the next achievement per group, in that group's defined order.
-    const groups = [...new Set(achievements.map((achievement) => achievement.group))];
+    const groups = [
+      ...new Set(achievements.map((achievement) => achievement.group)),
+    ];
     const nextAvailableAchievements = groups
       .map((group) =>
-        achievements.find((achievement) => achievement.group === group && !unlockedIds.has(achievement.id)),
+        achievements.find(
+          (achievement) =>
+            achievement.group === group && !unlockedIds.has(achievement.id),
+        ),
       )
       .filter((achievement) => achievement !== undefined)
       .map((achievement) => achievement.name);
@@ -144,7 +151,7 @@ export class AchievementsService {
     const currentBadge = [...badges]
       .reverse()
       .find((badge) => badge.requiredAchievements <= totalUnlocked);
-      
+
     const nextBadge = badges.find(
       (badge) => badge.requiredAchievements > totalUnlocked,
     );

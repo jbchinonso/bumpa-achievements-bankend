@@ -8,6 +8,7 @@ import { UsersModule } from './users/users.module';
 import { PurchasesModule } from './purchases/purchases.module';
 import { AchievementsModule } from './achievements/achievements.module';
 import { BadgesModule } from './badges/badges.module';
+import { CashbackModule } from './cashback/cashback.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { BadgesModule } from './badges/badges.module';
     PurchasesModule,
     AchievementsModule,
     BadgesModule,
+    CashbackModule,
   ],
   controllers: [AppController],
   providers: [AppService],
