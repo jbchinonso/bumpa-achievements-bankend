@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../prisma/prisma.service';
 import { AppEvents } from '../common/events/app-events';
@@ -6,6 +6,8 @@ import { BadgeUnlockedEvent } from '../common/events/badge-unlocked.event';
 
 @Injectable()
 export class BadgesService {
+  private readonly logger = new Logger(BadgesService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly eventEmitter: EventEmitter2,
@@ -57,6 +59,7 @@ export class BadgesService {
     });
 
     for (const badge of toUnlock) {
+      this.logger.log(`Badge unlocked: "${badge.name}" user=${userId}`);
       await this.eventEmitter.emitAsync(
         AppEvents.BADGE_UNLOCKED,
         new BadgeUnlockedEvent(badge.name, user),

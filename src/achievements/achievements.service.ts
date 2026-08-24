@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Achievement } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
@@ -7,6 +7,8 @@ import { AchievementUnlockedEvent } from '../common/events/achievement-unlocked.
 
 @Injectable()
 export class AchievementsService {
+  private readonly logger = new Logger(AchievementsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly eventEmitter: EventEmitter2,
@@ -101,6 +103,9 @@ export class AchievementsService {
     });
 
     for (const achievement of achievements) {
+      this.logger.log(
+        `Achievement unlocked: "${achievement.name}" user=${userId}`,
+      );
       await this.eventEmitter.emitAsync(
         AppEvents.ACHIEVEMENT_UNLOCKED,
         new AchievementUnlockedEvent(achievement.name, user),

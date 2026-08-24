@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { PAYMENT_PROVIDER } from '../common/interfaces/payment-provider.interface';
 import type { PaymentProvider } from '../common/interfaces/payment-provider.interface';
@@ -8,6 +8,8 @@ const CASHBACK_AMOUNT_KOBO = 30_000; // 300 Naira
 
 @Injectable()
 export class CashbackService {
+  private readonly logger = new Logger(CashbackService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     @Inject(PAYMENT_PROVIDER)
@@ -28,7 +30,12 @@ export class CashbackService {
         status: { in: ['PENDING', 'SUCCESS'] },
       },
     });
-    if (existing) return;
+    if (existing) {
+      this.logger.warn(
+        `Skipped duplicate cashback: badge="${event.badge_name}" user=${event.user.id} already has a ${existing.status} transaction`,
+      );
+      return;
+    }
 
     const transaction = await this.prisma.cashbackTransaction.create({
       data: {
@@ -38,6 +45,9 @@ export class CashbackService {
         status: 'PENDING',
       },
     });
+    this.logger.log(
+      `Cashback initiated: transaction=${transaction.id} badge="${event.badge_name}" user=${event.user.id} amount=${CASHBACK_AMOUNT_KOBO}`,
+    );
 
     const result = await this.paymentProvider.transfer({
       amountKobo: CASHBACK_AMOUNT_KOBO,
@@ -64,6 +74,9 @@ export class CashbackService {
           cashbackReference: result.reference,
         },
       });
+      this.logger.log(
+        `Cashback succeeded: transaction=${transaction.id} reference=${result.reference}`,
+      );
     } else {
       await this.prisma.cashbackTransaction.update({
         where: { id: transaction.id },
@@ -77,6 +90,9 @@ export class CashbackService {
         where: { userId: event.user.id, badgeId: badge.id },
         data: { cashbackStatus: 'FAILED' },
       });
+      this.logger.warn(
+        `Cashback failed: transaction=${transaction.id} reason=${result.failureReason}`,
+      );
     }
   }
 }
